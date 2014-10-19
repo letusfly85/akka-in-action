@@ -11,7 +11,7 @@ class DbWriterActor(conn: DbConnection) extends Actor with ActorLogging {
 
       // 行番号が１のときはエラーを発生させるようにする
       if (log.line == 1) {
-        throw new Exception("something happened!!")
+        throw new Exception("something wrong happened!")
       }
       val sql = s"insert into logs (name, line, text) values ('${log.name}', ${log.line}, '${log.text}')"
       write(sql)
