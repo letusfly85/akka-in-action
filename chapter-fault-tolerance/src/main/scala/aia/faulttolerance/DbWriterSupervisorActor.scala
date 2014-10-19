@@ -7,7 +7,8 @@ class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLoggin
 
   override def supervisorStrategy = OneForOneStrategy() {
     case e: Exception =>
-      e.printStackTrace()
+      log.error(e.getCause, e.getMessage)
+      log.info("re-start db writer actor system!")
       Restart
 
     case _ =>
