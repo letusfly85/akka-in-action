@@ -24,7 +24,7 @@ class DbWriterActor(conn: DbConnection) extends Actor with ActorLogging {
       log.info(s"exit with message: ${msg}")
       sys.exit(0)
 
-    case r: Reconnect =>
+    case Reconnect =>
       log.info(s"trying to reconnect to database....")
       conn.reConnect
 

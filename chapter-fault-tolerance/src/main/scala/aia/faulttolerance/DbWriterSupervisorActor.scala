@@ -1,20 +1,27 @@
 package aia.faulttolerance
 
 import java.sql.SQLException
+import java.util.concurrent.TimeUnit
 
+import akka.pattern.ask
 import akka.actor.SupervisorStrategy.{Escalate, Stop, Restart}
 import akka.actor.{ActorLogging, OneForOneStrategy, Actor, Props}
+import akka.util.Timeout
 import scala.concurrent.duration._
 
 class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLogging {
 
-  //override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
-  override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 3, withinTimeRange = 2 seconds) {
+  val writer = context.actorOf(writerProps)
+  implicit val timeout = Timeout(10000, TimeUnit.MILLISECONDS)
+
+  override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 30, withinTimeRange = 2 seconds) {
 
     case e: SQLException =>
       log.error(e.getCause, e.getMessage)
       log.info(s"${e.getErrorCode.toString}: check your database state, stop actor system.")
-      Stop
+      writer ? Reconnect
+      Thread.sleep(10000)
+      Restart
 
     case e: RuntimeException =>
       log.error(e.getCause, e.getMessage)
@@ -25,8 +32,6 @@ class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLoggin
       log.info(s"escalate error")
       Escalate
   }
-
-  val writer = context.actorOf(writerProps)
 
   def receive = {
     case LogText(name, line, text) =>
