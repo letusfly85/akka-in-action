@@ -12,6 +12,8 @@ class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLoggin
       log.error(e.getCause, e.getMessage)
       log.info(s"${e.getErrorCode.toString}: check your database state, stop actor system.")
       Stop
+      //TODO: stop log monitoring
+      //throw new DbConnectionBrokenException("Database down!")
 
     case e: Exception =>
       log.error(e.getCause, e.getMessage)
