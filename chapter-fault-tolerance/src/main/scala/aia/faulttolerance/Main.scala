@@ -5,6 +5,11 @@ import java.io.File
 import akka.actor.{Props, ActorSystem}
 import scala.concurrent.duration._
 
+/**
+ * refs: http://doc.akka.io/docs/akka/snapshot/scala/fault-tolerance.html#fault-tolerance-scala
+ *
+ *
+ */
 object Main extends App {
   val system = ActorSystem("log-writer")
 
@@ -31,7 +36,7 @@ object Main extends App {
   implicit val executionContext = system.dispatcher
   system.scheduler.schedule(3 seconds, 5 seconds, system.actorOf(logProcSuperVisorProps), log1)
 
-  system.awaitTermination(30.seconds)
+  //system.awaitTermination(30.seconds)
   //Thread.sleep(3000)
   //system.shutdown()
 }

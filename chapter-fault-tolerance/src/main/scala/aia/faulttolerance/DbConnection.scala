@@ -24,4 +24,9 @@ class DbConnection {
     conn = DriverManager.getConnection(url,user,pass)
   }
 
+  def reConnect() = {
+    if (this.conn.isClosed) {
+      startConnect()
+    }
+  }
 }
