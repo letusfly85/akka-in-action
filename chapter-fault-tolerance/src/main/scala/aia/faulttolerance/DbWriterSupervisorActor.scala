@@ -1,31 +1,31 @@
 package aia.faulttolerance
 
+import java.net.ConnectException
 import java.sql.SQLException
-import java.util.concurrent.TimeUnit
 
-import akka.pattern.ask
 import akka.actor.SupervisorStrategy.{Escalate, Stop, Restart}
-import akka.actor.{ActorLogging, OneForOneStrategy, Actor, Props}
-import akka.util.Timeout
+import akka.actor._
 import scala.concurrent.duration._
 
 class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLogging {
 
   val writer = context.actorOf(writerProps)
-  implicit val timeout = Timeout(10000, TimeUnit.MILLISECONDS)
 
-  override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 30, withinTimeRange = 2 seconds) {
+  override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 30, withinTimeRange = 5 seconds) {
 
     case e: SQLException =>
-      log.error(e.getCause, e.getMessage)
-      log.info(s"${e.getErrorCode.toString}: check your database state, stop actor system.")
-      writer ? Reconnect
-      Thread.sleep(10000)
+      log.info(s"check your database state......")
+      Restart
+
+    //TODO DBWriterでのハンドリングをうまくやれば発生しないか確認・対応
+    case e: ConnectException =>
+      Restart
+
+    //TODO DBWriterでのハンドリングをうまくやれば発生しないか確認・対応
+    case e: NullPointerException =>
       Restart
 
     case e: RuntimeException =>
-      log.error(e.getCause, e.getMessage)
-      log.info("re-start db writer actor system!")
       Stop
 
     case e: Exception =>
@@ -40,12 +40,5 @@ class DbWriterSupervisorActor(writerProps: Props) extends Actor with ActorLoggin
 
     case _ =>
       log.info("something happened.")
-  }
-
-  override def preRestart(reason: Throwable, message: Option[Any]) {
-    log.info("re-connect session")
-
-    writer ! Reconnect
-    super.preRestart(reason, message)
   }
 }

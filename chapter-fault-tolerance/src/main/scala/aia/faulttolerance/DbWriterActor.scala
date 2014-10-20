@@ -33,12 +33,14 @@ class DbWriterActor(conn: DbConnection) extends Actor with ActorLogging {
       throw new DbConnectionBrokenException[SQLException]("error!")
   }
 
-  /*
-  override def preRestart(cause: Throwable, msg: Option[Any]) = {
-    println("pre start!")
-  }
-  */
+  override def preRestart(reason: Throwable, message: Option[Any]) {
+    log.info("re-connect to database...")
 
+    conn.reConnect()
+    super.preRestart(reason, message)
+  }
+
+  //TODO DBを落とした際にはconnがnullでわたる事があるので対応を組み込む
   def write(sql: String): Unit = {
     log.info(sql)
 
