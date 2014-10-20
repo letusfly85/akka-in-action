@@ -25,9 +25,6 @@ class DbConnection {
   }
 
   def reConnect() = {
-    //if (this.conn.isClosed) {
-    conn = null
     startConnect()
-    //}
   }
 }
